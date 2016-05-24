@@ -205,7 +205,7 @@ class Parser(ins: InputStream, visitor: RdbVisitor) {
     }
 
     // 返回： (条目类型c:字符串 i:整数,  rawBytes长度,  新下标位置)
-    def decodeSpecialFlag(buf: Array[Byte], start: Int): Tuple3[Char, Int, Int] = {
+    def decodeSpecialFlag(buf: Array[Byte], start: Int): Tuple3[Char, Long, Int] = {
         var index = start
         var rawBytesLen: Long = 0
         var flag = 'c' // 默认假设条目是字符串的
@@ -220,7 +220,7 @@ class Parser(ins: InputStream, visitor: RdbVisitor) {
                 index = index + 1
             }
             case 0x02 => {
-                rawBytesLen = getBigEndianLong(buf, index, 4)
+                rawBytesLen = getLittleEndianLong(buf, index, 4)
                 index = index + 4
             }
 
@@ -229,25 +229,25 @@ class Parser(ins: InputStream, visitor: RdbVisitor) {
 
                 specialFlag >>> 4 match {
                     case 0x0C => {
-                        rawBytesLen = getBigEndianLong(buf, index, 2)
+                        rawBytesLen = getLittleEndianLong(buf, index, 2)
                         index = index + 2
                     }
                     case 0x0D => {
-                        rawBytesLen = getBigEndianLong(buf, index, 4)
+                        rawBytesLen = getLittleEndianLong(buf, index, 4)
                         index = index + 4
                     }
                     case 0x0E => {
-                        rawBytesLen = getBigEndianLong(buf, index, 8)
+                        rawBytesLen = getLittleEndianLong(buf, index, 8)
                         index = index + 8
                     }
                     case 0x0F => {
                         specialFlag match {
                             case 0xF0 =>
-                                rawBytesLen = getBigEndianLong(buf, index, 3)
+                                rawBytesLen = getLittleEndianLong(buf, index, 3)
                                 index = index + 3
 
                             case 0xFE =>
-                                rawBytesLen = getBigEndianLong(buf, index, 1)
+                                rawBytesLen = getLittleEndianLong(buf, index, 1)
                                 index = index + 1
 
                             case _ =>
@@ -258,9 +258,9 @@ class Parser(ins: InputStream, visitor: RdbVisitor) {
             }
         }
 
-        val rawBytesLenth = rawBytesLen.asInstanceOf[Int]
+        //val rawBytesLenth = rawBytesLen.asInstanceOf[Int]
 
-        (flag, rawBytesLenth, index)
+        (flag, rawBytesLen, index)
     }
 
     def decodeRawBytesOfEntry(buf: Array[Byte], index: Int, rawBytesLenth: Int): Tuple2[Int, Array[Byte]] = {
